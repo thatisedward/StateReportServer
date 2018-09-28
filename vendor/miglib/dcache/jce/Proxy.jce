@@ -1,0 +1,592 @@
+#include "ProxyShare.jce"
+#include "CacheShare.jce"
+module DCache
+{
+	interface Proxy
+	{
+		/**
+		*根据key查询value,其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+	    	*@param moduleName, 业务模块名
+	    	*@param keyItem, key的值
+	    	*@param value, 查询结构，返回数据
+	    	*@return int, 
+		*	ET_SUCC 成功
+		*	ET_SYS_ERR 系统错误
+		*	ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*	ET_KEY_INVALID  传入key值无效
+		*	ET_KEY_AREA_ERR	传入的Key不在Cache服务范围内
+		*	ET_NO_DATA 没有记录
+		*	ET_KEY_TYPE_ERR 传入的key类型与cacheserver配置的key类型不符合
+		*/
+		int getString(string moduleName, string keyItem, out string value);
+		int getInt(string moduleName, int keyItem, out string value);
+		int getLong(string moduleName, long keyItem, out string value);
+		
+		int getStringWithVer(string moduleName, string keyItem, out string value, out byte ver);
+		int getIntWithVer(string moduleName, int keyItem, out string value, out byte ver);
+		int getLongWithVer(string moduleName, long keyItem, out string value, out byte ver);		
+
+		int getStringBS(string moduleName, vector<byte> keyItem, out vector<byte> value);
+		int getIntBS(string moduleName, int keyItem, out vector<byte> value);
+		int getLongBS(string moduleName, long keyItem, out vector<byte> value);
+
+		int getStringWithVerBS(string moduleName, vector<byte> keyItem, out vector<byte> value, out byte ver);
+		int getIntWithVerBS(string moduleName, int keyItem, out vector<byte> value, out byte ver);
+		int getLongWithVerBS(string moduleName, long keyItem, out vector<byte> value, out byte ver);
+
+		/**
+		*批量查询,其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+	    	*@param moduleName, 业务模块名
+	    	*@param vtKeyItem, key值数组
+	    	*@param vtValue, 查询结果，key-value结构数组，如果某些key没有值则数组不包含该key结构
+	    	*@return int, 
+		*	ET_SUCC 成功
+		*	ET_SYS_ERR 系统错误
+		*/
+		int getStringBatch(string moduleName, vector<string> vtKeyItem, out vector<SKeyValue> vtValue);
+		int getIntBatch(string moduleName,  vector<int> vtKeyItem, out vector<IKeyValue> vtValue);
+		int getLongBatch(string moduleName,  vector<long> vtKeyItem, out vector<LKeyValue> vtValue);
+
+		int getStringBatchBS(string moduleName, vector<vector<byte> > vtKeyItem, out vector<SKeyValueBS> vtValue);
+		int getIntBatchBS(string moduleName,  vector<int> vtKeyItem, out vector<IKeyValueBS> vtValue);
+		int getLongBatchBS(string moduleName,  vector<long> vtKeyItem, out vector<LKeyValueBS> vtValue);
+	
+		int checkString(string moduleName, string keyItem);
+		int checkInt(string moduleName, int keyItem);
+		int checkLong(string moduleName, long keyItem);
+
+		/**
+		*批量检测key的状态,其中BS系列函数主要用于java客户端
+		*@param moduleName, 业务模块名
+		*@param vtKeyItem, key值数组
+		*@param mpResult  存放key/result检测结果,当存在重复key时,检测结果保存最后一次检测结果
+		*其中result值涵义如下
+		*	CACHE_SUCC 成功，有记录
+		*	CACHE_NO_DATA 没有记录
+		*	CACHE_KEY_TYPE_ERR 传入的key类型与cacheserver配置的key类型不符合
+		*	CACHE_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	CACHE_MODULE_NAME_ERR 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	CACHE_KEY_AREA_ERR 传入的Key不在Cache服务范围内
+		*	CACHE_SYS_ERR 系统错误
+		*@return int 标识调用成功与否, 
+		*      CACHE_SUCC 成功，执行成功
+		*	CACHE_SYS_ERR 系统错误，中断检查
+		*/
+		int checkStringBatch(string moduleName, vector<string> vtKeyItem, out map<string,int> mpResult);
+		int checkIntBatch(string moduleName, vector<int> vtKeyItem, out map<int,int> mpResult);
+		int checkLongBatch(string moduleName, vector<long> vtKeyItem, out map<long,int> mpResult);
+
+		int checkStringBatchBS(string moduleName, vector<vector<byte> > vtKeyItem, out map<string,int> mpResult);
+		int checkIntBatchBS(string moduleName, vector<int> vtKeyItem, out map<int,int> mpResult);
+		int checkLongBatchBS(string moduleName, vector<long> vtKeyItem, out map<long,int> mpResult);
+	
+		/**
+		*设置key-value,其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+		*@param moduleName, 业务模块名
+		*@param keyItem, key的值
+		*@param value, 要设置的数据
+		*@return int,
+		*	ET_SUCC 成功
+		*	ET_SYS_ERR 系统错误
+		*	ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*	ET_KEY_INVALID  传入key值无效
+		*	ET_KEY_AREA_ERR	传入的Key不在Cache服务范围内
+		*	ET_KEY_TYPE_ERR 传入的key类型与cacheserver配置的key类型不符合
+		*/
+		int setString(string moduleName, string keyItem, string value);
+		int setInt(string moduleName, int keyItem, string value);
+		int setLong(string moduleName, long keyItem, string value);
+		int setStringBS(string moduleName, vector<byte> keyItem, vector<byte> value);
+		int setIntBS(string moduleName, int keyItem, vector<byte> value);
+		int setLongBS(string moduleName, long keyItem, vector<byte> value);
+		
+		/**
+		*批量设置key-value，其中BS系列函数主要用于java客户端访问时传入字节流的key和value
+		*@param moduleName, 业务模块名
+		*@param map<key, value>, key-value列表
+		*@param map<key, result>, key-result列表
+		*@return int,
+		*	ET_SUCC 成功，不表示所有数据都成功set，具体要看key-result列表，但是下面返回值都代表所有数据都set失败
+		*	ET_INPUT_PARAM_ERROR 输入参数错误，通常是key-value列表为空
+		*	ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*	ET_KEY_INVALID 传入所有key值均无效
+		*	ET_SYS_ERR 系统错误
+		************************************************************************************************************
+		*map<key, result>中result可能是：
+		*	SET_SUCC 成功
+		*	SET_ERROR 失败	
+		*/
+		int setIntBatch(string moduleName, map<int, string> keyValue, out map<int, int> keyResult);
+		int setLongBatch(string moduleName, map<long, string> keyValue, out map<long, int> keyResult);
+		int setStringBatch(string moduleName, map<string, string> keyValue, out map<string, int> keyResult);
+		int setIntBatchBS(string moduleName, map<int, vector<byte> > keyValue, out map<int, int> keyResult);
+		int setLongBatchBS(string moduleName, map<long, vector<byte> > keyValue, out map<long, int> keyResult);
+		int setStringBatchBS(string moduleName, vector<SSetKeyValueBS> keyValue, out vector<SSetKeyResultBS> keyResult);		
+
+		/**
+		*设置key-value,其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+		*@param moduleName, 业务模块名
+		*@param keyItem, key的值
+		*@param value, 要设置的数据
+		*@param dirty, 是否脏数据
+		*@return int,
+		*   ET_SUCC 成功
+		*   ET_SYS_ERR 系统错误
+		*   ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*   ET_KEY_INVALID 传入key值无效
+		*   ET_KEY_AREA_ERR 传入的key值不在Cache的服务范围内
+		*   ET_KEY_TYPE_ERR 传入的key类型与CacheServer配置的key类型不符合
+		*/
+		int setStringWithDirty(string moduleName, string keyItem, string value, bool dirty);
+		int setIntWithDirty(string moduleName, int keyItem, string value, bool dirty);
+		int setLongWithDirty(string moduleName, long keyItem, string value, bool dirty);
+		int setStringWithDirtyBS(string moduleName, vector<byte> keyItem, vector<byte> value, bool dirty);
+		int setIntWithDirtyBS(string moduleName, int keyItem, vector<byte> value, bool dirty);
+		int setLongWithDirtyBS(string moduleName, long keyItem, vector<byte> value, bool dirty);
+		
+		/**
+		*设置key-value，其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+		*@param moduleName，业务模块名
+		*@param keyItem，key的值
+		*@param value，要设置的数据
+		*@param ver，数据版本
+		*@param dirty，是否脏数据
+		*@param expireTimeSecond，设置数据过期的绝对时间，以秒为单位。CacheServer将根据这个时间自动淘汰过期数据。如果数据没有过期的概念，请将此参数设为0
+		*@return int，
+		*   ET_SUCC 成功
+		*   ET_SYS_ERR 系统错误
+		*   ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*   ET_KEY_INVALID 传入key值无效
+		*   ET_KEY_AREA_ERR 传入的key值不在Cache的服务范围内
+		*   ET_KEY_TYPE_ERR 传入的key类型与CacheServer配置的key类型不符合
+		*   ET_DATA_VER_MISMATCH 数据版本错误
+		*/
+		int setStringEx(string moduleName, string keyItem, string value, byte ver, bool dirty, int expireTimeSecond);
+		int setIntEx(string moduleName, int keyItem, string value, byte ver, bool dirty, int expireTimeSecond);
+		int setLongEx(string moduleName, long keyItem, string value, byte ver, bool dirty, int expireTimeSecond);
+		int setStringExBS(string moduleName, vector<byte> keyItem, vector<byte> value, byte ver, bool dirty, int expireTimeSecond);
+		int setIntExBS(string moduleName, int keyItem, vector<byte> value, byte ver, bool dirty, int expireTimeSecond);
+		int setLongExBS(string moduleName, long keyItem, vector<byte> value, byte ver, bool dirty, int expireTimeSecond);		
+		
+		/**
+		*批量设置key-value，其中BS系列函数主要用于java客户端访问时传入字节流的key和value
+		*@param moduleName, 业务模块名
+		*@param vector<(S/I/L)SetKeyValue>, key-value列表
+		*@param map<key, result>, key-result列表
+		*@return int,
+		*	ET_SUCC 成功，不表示所有数据都成功set，具体要看key-result列表，但是下面返回值都代表所有数据都set失败
+		*	ET_INPUT_PARAM_ERROR 输入参数错误，通常是key-value列表为空
+		*	ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*	ET_KEY_INVALID 传入所有key值均无效
+		*	ET_SYS_ERR 系统错误
+		************************************************************************************************************
+		*map<key, result>中result可能包括：
+		*	SET_SUCC 成功
+		*	SET_ERROR 失败
+		*	SET_DATA_VER_MISMATCH 数据版本号错误
+		*/
+		int setStringExBatch(string moduleName, vector<SSetKeyValue> keyValue, out map<string, int> keyResult);
+		int setIntExBatch(string moduleName, vector<ISetKeyValue> keyValue, out map<int, int> keyResult);
+		int setLongExBatch(string moduleName, vector<LSetKeyValue> keyValue, out map<long, int> keyResult);	
+		int setStringExBatchBS(string moduleName, vector<SSetKeyValueBS> keyValue, out vector<SSetKeyResultBS> keyResult);
+		int setIntExBatchBS(string moduleName, vector<ISetKeyValueBS> keyValue, out map<int, int> keyResult);
+		int setLongExBatchBS(string moduleName, vector<LSetKeyValueBS> keyValue, out map<long, int> keyResult);		
+
+                /**
+        	*原子更新key-value，带是否是脏数据以及数据淘汰时间
+        	*@param moduleName, 业务模块名
+        	*@param keyItem, key值
+        	*@param value, value值
+        	*@param dirty, 是否脏数据
+        	*@param expireTimeSecond, 淘汰时间
+        	*@return int,
+        	*	CACHE_SUCC 成功
+        	*	CACHE_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+        	*	CACHE_MODULE_NAME_ERR 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+        	*	CACHE_KEY_AREA_ERR 传入的Key不在Cache服务范围内
+        	*	CACHE_SYS_ERR 系统错误
+        	*/
+                int updateIntEx(string moduleName, int keyItem, string value, bool dirty, int expireTimeSecond, Op option, out string retValue);
+                int updateIntExBS(string moduleName, int keyItem, vector<byte> value, bool dirty, int expireTimeSecond, Op option, out vector<byte> retValue);
+                int updateLongEx(string moduleName, long keyItem, string value, bool dirty, int expireTimeSecond, Op option, out string retValue);
+                int updateLongExBS(string moduleName, long keyItem, vector<byte> value, bool dirty, int expireTimeSecond, Op option, out vector<byte> retValue);
+                int updateStringEx(string moduleName, string keyItem, string value, bool dirty, int expireTimeSecond, Op option, out string retValue);
+                int updateStringExBS(string moduleName, vector<byte> keyItem, vector<byte> value, bool dirty, int expireTimeSecond, Op option, out vector<byte> retValue);
+
+		/**
+		*删除key对应的值，只删除Cache中数据，不删除DB中的数据,其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+		*@param moduleName, 业务模块名
+		*@param keyItem, key的值
+		*@return int,
+		*	ET_SUCC 成功
+		*	ET_SYS_ERR 系统错误
+		*	ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*	ET_KEY_INVALID  传入key值无效
+		*	ET_KEY_AREA_ERR	传入的Key不在Cache服务范围内
+		*	ET_NO_DATA 没有记录
+		*	ET_KEY_TYPE_ERR 传入的key类型与cacheserver配置的key类型不符合
+		*/
+		int eraseString(string moduleName, string keyItem);
+		int eraseInt(string moduleName, int keyItem);
+		int eraseLong(string moduleName, long keyItem);
+                int eraseStringBatch(string moduleName, map<string, byte> keyItem, out map<string, int> keyResult);
+                int eraseIntBatch(string moduleName, map<int, byte> keyItem, out map<int, int> keyResult);
+                int eraseLongBatch(string moduleName, map<long, byte> keyItem, out map<long, int> keyResult);
+                int eraseStringBatchBS(string moduleName, vector<SKeyVersionBS> keyItem, out vector<SKeyResultBS> keyResult);
+		int eraseStringBS(string moduleName, vector<byte> keyItem);
+
+		/**
+		*删除key对应的值，包括DB中的数据,其中BS系列函数主要用于java客户端访问时传入和返回字节流的key和value
+		*@param moduleName, 业务模块名
+		*@param keyItem, key的值
+		*@return int,
+		*	ET_SUCC 成功
+		*	ET_SYS_ERR 系统错误
+		*	ET_MODULE_NAME_INVALID 无效业务模块名，系统不支持该业务模块
+		*	ET_KEY_INVALID  传入key值无效
+		*	ET_KEY_AREA_ERR	传入的Key不在Cache服务范围内
+		*	ET_NO_DATA 没有记录
+		*	ET_KEY_TYPE_ERR 传入的key类型与cacheserver配置的key类型不符合
+		*	ET_FORBID_DEL 禁止删除
+		*/
+		int delString(string moduleName, string keyItem);
+		int delInt(string moduleName, int keyItem);
+		int delLong(string moduleName, long keyItem);
+                int delStringBatch(string moduleName, map<string, byte> keyItem, out map<string, int> keyResult);
+                int delIntBatch(string moduleName, map<int, byte> keyItem, out map<int, int> keyResult);
+                int delLongBatch(string moduleName, map<long, byte> keyItem, out map<long, int> keyResult);
+                int delStringBatchBS(string moduleName, vector<SKeyVersionBS> keyItem, out vector<SKeyResultBS> keyResult);
+		int delStringBS(string moduleName, vector<byte> keyItem);
+                
+        	/**
+        	*获取cache下所有的主key
+        	*参数说明：
+        	*	moduleName：业务模块名
+        	*	index： 开始获取的hash桶编号
+                *       count： 获取多少个hash桶数据
+        	*	mainKey： 主键
+        	*	isEnd： 是否还有数据
+                *			
+        	*@return int,
+        	*	ET_SUCC  		：成功
+        	*       ET_SERVER_TYPE_ERR	：CacheServer的状态不对，一般情况是请求发送到SLAVE状态的server了
+        	*       ET_MODULE_NAME_INVALID	：业务模块不匹配，传入业务模块名和Cache服务的模块名不一致
+        	*	ET_KEY_AREA_ERR		：传入的Key不在Cache服务范围内
+        	*	ET_SYS_ERR		：系统错误
+        	**********************************************************************/
+                int getAllMainKey(string moduleName,int index, int count, out vector<string> mainKey, out bool isEnd);
+
+		/*----------------------------------- 二期接口 ----------------------------------*/
+
+		/*********************************************************************
+		*功能：Cache数据查询
+		*参数说明：
+		*	moduleName：业务模块名
+		*	mainIndex： 主key
+		*	field： 需要查询的字段集，多个字段用','分隔如 "a,b", "*"表示所有
+		*	condition： 查询条件集合，除主Key外的其他字段，多个条件直间为And关系
+		*	vtData：	查询结果集合, vtData[i][DVER] 表示数据版本
+		*  	bGetMKCout：是否获取主key对应的value数
+		*@return int, 
+		*	>=0 成功，查询的记录数
+		*	ET_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	ET_MODULE_NAME_INVALID 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	ET_SYS_ERR 系统错误
+		*********************************************************************/
+		int select(string moduleName, string mainIndex, string field, vector<Condition> vtCond, out vector<map<string, string> > vtData);
+		int selectBS(string moduleName, vector<byte> mainIndex, string field, vector<ConditionBS> vtCond, out vector<map<string, vector<byte> > > vtData);
+		int selectEx(string moduleName, string mainIndex, string field, vector<Condition> vtCond, bool bGetMKCout, out vector<map<string, string> > vtData);
+		int selectBSEx(string moduleName, vector<byte> mainIndex, string field, vector<ConditionBS> vtCond, bool bGetMKCout, out vector<map<string, vector<byte> > > vtData);
+
+		int selectBin(string moduleName, string mainKey, vector<Condition> vtCond, bool bGetMKCout, out vector<byte> vtData);
+
+		/*********************************************************************
+		*功能：Cache数据查询 指定联合主键来访问主key链上的相邻数据
+		*参数说明：
+		*	moduleName：业务模块名
+		*	mainIndex： 主key
+		*	field： 需要查询的字段集，多个字段用','分隔如 "a,b", "*"表示所有
+		*	condition： 查询条件集合 必须包含ukey 不能包含value字段
+		*   iCount: 要取的个数
+		*   directionType 指定按主key链的哪个方向取 
+		    enum DirectionType
+			{
+    				FORWARD,    // 沿主key链前进
+    				BACK 	// 沿主key链倒退
+			}
+		*	vtData：	查询结果集合, vtData[i][DVER] 表示数据版本
+		*@return int, 
+		*	>=0 成功，查询的记录数
+		*	ET_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	ET_MODULE_NAME_INVALID 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	ET_SYS_ERR 系统错误
+		*********************************************************************/
+
+	    int selectByPos(string moduleName, string mainIndex, string field, vector<Condition> vtCond, unsigned int iCount, DirectionType directionType,  out vector<map<string, string> > vtData);
+
+		/*********************************************************************
+		*功能：Cache批量数据查询
+		*参数说明：
+		*	moduleName		：业务模块名
+		*  	vtMainKey 		：批量主key
+		*	field	  		：需要查询的字段集，多个字段用','分隔如 "a,b", "*"表示所有
+		*	vtCond	 		：查询条件集合，除主Key外的其他字段，多个条件直间为And关系
+		*	vtData	 		：查询结果集合
+		*@return int,
+		*	ET_SUCC   		：成功
+		*	ET_MODULE_NAME_INVALID  ：业务模块不匹配，传入的业务模块名Proxy不支持
+		*	ET_INPUT_PARAM_ERROR 	：输入参数有误
+		*	ET_KEY_INVALID		：传入key值无效
+		* 	ET_SYS_ERR		：系统错误
+		*********************************************************************/
+		int selectBatch(string moduleName, vector<string> vtMainKey, string field, vector<Condition> vtCond, out vector<MainKeyValue> vtData);
+		int selectBatchBS(string moduleName, vector<vector<byte> > vtMainKey, string field, vector<ConditionBS> vtCond, out vector<MainKeyValueBS> vtData);
+
+                /*********************************************************************
+        	*功能：Cache按主key批量数据查询
+        	*参数说明：
+        	*	moduleName：业务模块名
+        	*	vtMainKey： 不同主key
+        	*	vtCond： 查询条件集合，除主Key外的其他字段，多个条件间为and关系
+        	*	vtData：    查询结果集合
+        	*@return int,
+        	*	ET_SUCC  		：成功
+        	*       ET_SERVER_TYPE_ERR	：CacheServer的状态不对，一般情况是请求发送到SLAVE状态的server了
+        	*       ET_MODULE_NAME_INVALID	：业务模块不匹配，传入业务模块名和Cache服务的模块名不一致
+        	*	ET_KEY_AREA_ERR		：传入的Key不在Cache服务范围内
+        	*	ET_SYS_ERR		：系统错误
+        	**********************************************************************/
+                int selectBinBatch(string moduleName,vector<string> vtMainKey,vector<Condition> vtCond, out vector<MainKeyValueBin> vtData);
+
+		/*********************************************************************
+		*功能：Cache按主键批量数据查询
+		*参数说明：
+		*	moduleName：业务模块名
+		*	vtMUKey： 主键集合
+		*	field：	    需要查询的字段集，多个字段之间用','分隔，如"a,b", "*"标识所有
+		*	vtData：    结果集合,Record中的ret值涵义如下:
+		*				CACHE_ONLY_KEY: 内存和数据库中均无数据
+		*				CACHE_NO_DATA:  无数据				
+		*@return int,
+		*	ET_SUCC   		：成功
+		*	ET_MODULE_NAME_INVALID  ：业务模块不匹配，传入的业务模块名Proxy不支持
+		*	ET_INPUT_PARAM_ERROR 	：输入参数有误
+		*	ET_KEY_INVALID		：传入key值无效
+		* 	ET_SYS_ERR		：系统错误
+		**********************************************************************/
+		int selectBatchEx(string moduleName, vector<Record> vtMUKey, string field, out vector<Record> vtData);
+		int selectBatchExBS(string moduleName, vector<RecordBS> vtMUKey, string field, out vector<RecordBS> vtData);
+
+                /*********************************************************************
+                *功能：Cache按主key批量数据查询
+                *参数说明：
+                *	moduleName：业务模块名
+                *	vtKey： 查询的主key和相应的条件
+                *@return int,
+                *	ET_SUCC  		：成功
+                *       ET_SERVER_TYPE_ERR	：CacheServer的状态不对，一般情况是请求发送到SLAVE状态的server了
+                *       ET_MODULE_NAME_INVALID	：业务模块不匹配，传入业务模块名和Cache服务的模块名不一致
+                *	ET_KEY_AREA_ERR		：传入的Key不在Cache服务范围内
+                *	ET_SYS_ERR		：系统错误
+                **********************************************************************/
+                int selectBatchOr(string moduleName, vector<MainKeyCondition> vtKey, out vector<MainKeyValue> vtData);
+                int selectBatchOrBS(string moduleName, vector<MainKeyConditionBS> vtKey, out vector<MainKeyValueBS> vtData);
+		
+		/*********************************************************************
+		*功能：插入一条记录到Cache
+		*参数说明：
+		*	moduleName：业务模块名
+		*	value： 需要插入的记录，必须包含主键
+		* 	expireTimeSecond：设置数据过期的绝对时间，以秒为单位。CacheServer将根据这个时间自动淘汰过期数据。如果数据没有过期的概念，请将此参数设为0
+		*@return int, 
+		*	ET_SUCC 成功
+		*	ET_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	ET_MODULE_NAME_INVALID 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	ET_FORBID_OPT 禁止操作，可能在做迁移
+		*	ET_DATA_EXIST 数据已存在
+		*       ET_DATA_VER_MISMATCH 数据版本错误
+		*	ET_SYS_ERR 系统错误
+		*********************************************************************/
+		int insert(string moduleName, string mainIndex, map<string, UpdateValue> mpValue, bool replace);
+		int insertBS(string moduleName, vector<byte> mainIndex, map<string, UpdateValueBS> mpValue, bool replace);
+		int insertEx(string moduleName, string mainIndex, map<string, UpdateValue> mpValue, byte ver, bool dirty, bool replace, int expireTimeSecond);
+		int insertBSEx(string moduleName, vector<byte> mainIndex, map<string, UpdateValueBS> mpValue, byte ver, bool dirty, bool replace, int expireTimeSecond);
+		
+		/*********************************************************************
+		*功能：Cache批量数据插入
+		*参数说明：
+		*	moduleName	 	：业务模块名
+		*	vtKeyValue	 	：批量插入值
+		*	mpFailIndexReason	：insert失败的记录下标及失败原因，key对应于vtKeyValue相应记录的下标，value是失败的原因
+		*@return int,
+		*	ET_SUCC 	 	：成功
+		*	ET_SYS_ERR 	 	：系统错误
+		*	ET_MODULE_NAME_INVALID  ：业务模块不匹配，传入的业务模块名Proxy不支持
+		*	ET_INPUT_PARAM_ERROR	：传入参数有误
+		*	ET_KEY_INVALID		：传入key值均无效
+		*	ET_PARTIAL_FAIL		：部分记录插入失败，具体原因在mpFailIndexReason中显示
+		*********************************************************************/
+		int insertBatch(string moduleName, vector<InsertKeyValue> vtKeyValue, out map<int, int> mpFailIndexReason);
+		int insertBatchBS(string moduleName, vector<InsertKeyValueBS> vtKeyValue, out map<int, int> mpFailIndexReason);
+	
+		/*********************************************************************
+		*功能：修改Cache记录 
+		*参数说明：
+		*	moduleName：业务模块名
+		*	masterKey： 主key
+		*	value： 需要修改的记录，不能包含任何key
+		*	condition： 查询条件集合，除主Key外的其他字段，多个条件直接为And关系
+		*	checkVer： 是否校验数据版本号，如果update主key下的一批数据，不做版本校验
+		* 	expireTimeSecond: 设置淘汰时间
+		*@return int, 
+		*	>=0 成功，修改的记录数
+		*	ET_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	ET_MODULE_NAME_INVALID 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	ET_FORBID_OPT 禁止操作，可能在做迁移
+		*       ET_DATA_VER_MISMATCH 数据版本错误
+		*	ET_SYS_ERR 系统错误
+		*********************************************************************/
+		int update(string moduleName, string mainIndex, map<string, UpdateValue> mpValue, vector<Condition> vtCond);
+		int updateBS(string moduleName, vector<byte> mainIndex, map<string, UpdateValueBS> mpValue, vector<ConditionBS> vtCond);
+		int updateEx(string moduleName, string mainIndex, map<string, UpdateValue> mpValue, vector<Condition> vtCond, byte ver, bool dirty, int expireTimeSecond);
+		int updateBSEx(string moduleName, vector<byte> mainIndex, map<string, UpdateValueBS> mpValue, vector<ConditionBS> vtCond, byte ver, bool dirty, int expireTimeSecond);
+                int updateAtom(string moduleName, string mainIndex, map<string, UpdateValue> mpValue, vector<Condition> vtCond, bool dirty, int expireTimeSecond);
+		int updateBSAtom(string moduleName, vector<byte> mainIndex, map<string, UpdateValueBS> mpValue, vector<ConditionBS> vtCond, bool dirty, int expireTimeSecond);
+
+		/*********************************************************************
+		*功能：Cache批量数据插入
+		*参数说明：
+		*	moduleName	 	：业务模块名
+		*	vtKeyValue	 	：批量更新的值
+		*	mpFailIndexReason	：update失败的记录下标及失败原因，key对应于vtKeyValue相应记录的下标，value是失败的原因
+		*@return int,
+		*	ET_SUCC 	 	：成功
+		*	ET_SYS_ERR 	 	：系统错误
+		*	ET_MODULE_NAME_INVALID  ：业务模块不匹配，传入的业务模块名Proxy不支持
+		*	ET_INPUT_PARAM_ERROR	：传入参数有误
+		*	ET_KEY_INVALID		：传入key值均无效
+		*	ET_PARTIAL_FAIL		：部分记录插入失败，具体原因在mpFailIndexReason中显示
+		*********************************************************************/
+	    int updateBatch(string moduleName, vector<UpdateKeyValue> vtKeyValue, out map<int, int> mpFailIndexReason);
+		int updateBatchBS(string moduleName, vector<UpdateKeyValueBS> vtKeyValue, out map<int, int> mpFailIndexReason);
+
+		/*********************************************************************
+		*功能：删除 Cache记录 
+		*参数说明：
+		*	moduleName：业务模块名
+		*	mainIndex： 主Key
+		*@return int, 
+		*	ET_SUCC 成功
+		*	ET_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	ET_MODULE_NAME_INVALID 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	ET_SYS_ERR 系统错误
+		*********************************************************************/
+		int erase(string moduleName, string mainIndex);
+		int eraseBS(string moduleName, vector<byte> mainIndex);
+	
+		/*********************************************************************
+		*功能：删除Cache和Db记录
+		*参数说明：
+		*	moduleName：业务模块名
+		*	mainIndex： 主key
+		*	condition： 查询条件集合，除主Key外的其他字段，多个条件直接为And关系
+		*@return int, 
+		*	ET_SUCC 成功
+		*	ET_SERVER_TYPE_ERR CacheServer的状态不对，一般情况是请求发到SLAVE状态的server了
+		*	ET_MODULE_NAME_INVALID 业务模块不匹配，传入的业务模块名和Cache服务的模块名不一致
+		*	ET_FORBID_OPT 禁止操作，可能在做迁移
+		*	ET_SYS_ERR 系统错误
+		*********************************************************************/
+		int del(string moduleName, string mainIndex, vector<Condition> vtCond);
+                int delBatch(string moduleName, vector<DelCondition> vtCond, out map<int, int> mRet);
+		int delBS(string moduleName, vector<byte> mainIndex, vector<ConditionBS> vtCond);
+
+        	/*********************************************************************
+        	*功能：获取主key下的数据数量，返回值为正数时，为数据量
+        	*参数说明：
+        	*	moduleName：业务模块名
+        	*	mainKey： 主键
+                *			
+        	*@return int,
+        	*	ET_SUCC  		：成功
+        	*       ET_SERVER_TYPE_ERR	：CacheServer的状态不对，一般情况是请求发送到SLAVE状态的server了
+        	*       ET_MODULE_NAME_INVALID	：业务模块不匹配，传入业务模块名和Cache服务的模块名不一致
+        	*	ET_KEY_AREA_ERR		：传入的Key不在Cache服务范围内
+        	*	ET_SYS_ERR		：系统错误
+        	**********************************************************************/
+                int getMainKeyCount(string moduleName,string mainKey);
+                
+        	/**
+        	*获取cache下所有的主key
+        	*参数说明：
+        	*	moduleName：业务模块名
+        	*	index： 开始获取的hash桶编号
+                *       count： 获取多少个hash桶数据
+        	*	mainKey： 主键
+        	*	isEnd： 是否还有数据
+                *			
+        	*@return int,
+        	*	ET_SUCC  		：成功
+        	*       ET_SERVER_TYPE_ERR	：CacheServer的状态不对，一般情况是请求发送到SLAVE状态的server了
+        	*       ET_MODULE_NAME_INVALID	：业务模块不匹配，传入业务模块名和Cache服务的模块名不一致
+        	*	ET_KEY_AREA_ERR		：传入的Key不在Cache服务范围内
+        	*	ET_SYS_ERR		：系统错误
+        	**********************************************************************/
+                int getMKAllMainKey(string moduleName,int index, int count, out vector<string> mainKey, out bool isEnd);
+
+                int getRangeList(string moduleName, string mainKey, string field, long iStart, long iEnd,  out vector<map<string, string> > vtData);
+				int getRangeListBS(string moduleName, vector<byte> mainKey, string field, long iStart, long iEnd,  out vector<map<string, vector<byte> > > vtData);
+                
+				int getList(string moduleName, string mainKey, string field, long iPos, out map<string, string> mData);
+				int getListBS(string moduleName, vector<byte> mainKey, string field, long iPos, out map<string, vector<byte> > mData);
+
+                int getSet(string moduleName, string mainKey, string field, out vector<map<string, string> > vtData);
+				int getSetBS(string moduleName, vector<byte> mainKey, string field, out vector<map<string, vector<byte> > > vtData);
+
+                int getScoreZSet(string moduleName, string mainKey, vector<Condition > vtCond, out double iScore);
+                int getRankZSet(string moduleName, string mainKey, vector<Condition > vtCond, bool bOrder, out long iPos);
+                int getRangeZSet(string moduleName, string mainKey, string field, long iStart, long iEnd, bool bUp, out vector<map<string, string> > vtData);
+                // Changed by tutuli 2017-5-9 9:53 search zset
+                int selectZSetBatch ( string moduleName , vector<string> vtMainKey ,string field , vector<Condition > vtCond , out vector<MainKeyValue> vtData );
+                int getRangeZSetByScore(string moduleName, string mainKey, string field, double iMin, double iMax, out vector<map<string, string> > vtData);
+
+				// Changed by tutuli 2017-5-9 9:53 search zsetbs
+				int selectZSetBatchBS (string moduleName, vector<vector<byte> > vtMainKey, string field, vector<ConditionBS> vtCond, out vector<MainKeyValueBS> vtData);
+				int getScoreZSetBS(string moduleName, vector<byte> mainKey, vector<ConditionBS > vtCond, out double iScore);
+                int getRankZSetBS(string moduleName, vector<byte> mainKey, vector<ConditionBS > vtCond, bool bOrder, out long iPos);
+                int getRangeZSetBS(string moduleName, vector<byte> mainKey, string field, long iStart, long iEnd, bool bUp, out vector<map<string, vector<byte> > > vtData);
+                int getRangeZSetByScoreBS(string moduleName, vector<byte> mainKey, string field, double iMin, double iMax, out vector<map<string, vector<byte> > > vtData);
+        	
+                int pushList(string moduleName, string mainKey, vector<InsertKeyValue > mpValue, bool bHead);
+                int popList(string moduleName, string mainKey, bool bHead, out map<string, string> value);
+                int replaceList(string moduleName, string mainKey, map<string, UpdateValue> mpValue, long iPos, int iExpireTime);
+                int trimList(string moduleName, string mainKey, long iStart, long iEnd);
+                int remList(string moduleName, string mainKey, bool bHead, long iCount);
+				
+				int pushListBS(string moduleName, vector<byte> mainKey, vector<InsertKeyValueBS > mpValue, bool bHead);
+                int popListBS(string moduleName, vector<byte> mainKey, bool bHead, out map<string, vector<byte> > value);
+                int replaceListBS(string moduleName, vector<byte> mainKey, map<string, UpdateValueBS> mpValue, long iPos, int iExpireTime);
+                int trimListBS(string moduleName, vector<byte> mainKey, long iStart, long iEnd);
+                int remListBS(string moduleName, vector<byte> mainKey, bool bHead, long iCount);
+
+                int addSet(string moduleName, string mainKey, map<string, UpdateValue> mpValue, int iExpireTime, byte iVersion, bool bDirty);
+                int delSet(string moduleName, string mainKey, vector<Condition > vtCond);
+				
+				int addSetBS(string moduleName, vector<byte> mainKey, map<string, UpdateValueBS> mpValue, int iExpireTime, byte iVersion, bool bDirty);
+                int delSetBS(string moduleName, vector<byte> mainKey, vector<ConditionBS> vtCond);
+
+
+                int addZSet(string moduleName, string mainKey, map<string, UpdateValue> mpValue, double score, int iExpireTime, byte iVersion, bool bDirty);
+                int incScoreZSet(string moduleName, string mainKey, map<string, UpdateValue> mpValue, double score, int iExpireTime, byte iVersion, bool bDirty);
+                int delZSet(string moduleName, string mainKey, vector<Condition > vtCond);
+                int delRangeZSet(string moduleName, string mainKey, double iMin, double iMax);
+				
+				int addZSetBS(string moduleName, vector<byte> mainKey, map<string, UpdateValueBS> mpValue, double score, int iExpireTime, byte iVersion, bool bDirty);
+                int incScoreZSetBS(string moduleName, vector<byte> mainKey, map<string, UpdateValueBS> mpValue, double score, int iExpireTime, byte iVersion, bool bDirty);
+                int delZSetBS(string moduleName, vector<byte> mainKey, vector<ConditionBS> vtCond);
+                int delRangeZSetBS(string moduleName, vector<byte> mainKey, double iMin, double iMax);
+                	
+		/*------------------------ 用于节点间数据同步的接口（非业务访问接口） ---------------------*/
+		int syncSetBinLog(string moduleName, string set, string groupName, string logContent, bool compress, CacheType cacheType);
+	};
+};

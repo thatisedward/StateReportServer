@@ -1,0 +1,230 @@
+module bdb
+{
+
+//bdb支持的字段类型
+enum BdbFieldType
+{
+	DB_NOSUPPORT = 0,
+	DB_Bool,
+	DB_Char,
+	DB_INT16,
+	DB_UINT16,
+	DB_INT32,
+	DB_UINT32,
+	DB_INT64,
+	DB_UINT64,
+	DB_STR,
+	DB_FLOAT,
+	DB_DOUBLE,
+
+};
+
+//bdb字段支持的操作条件
+enum BdbOper
+{
+    EQ, // ==
+	NE, // !=
+	GT, // >
+	LT, // <
+	LE, // <=
+	GE, // >=
+};
+
+//bdb字段支持的操作条件
+enum BdbCombine
+{
+	AND,
+	OR,
+};
+
+//bdb字段支持的操作类型
+enum BdbFieldOper
+{
+	DB_FIELD_EQ = 0,
+	DB_FIELD_ADD,
+	DB_FIELD_SUB,
+};
+
+//bdb字段信息
+struct BdbField
+{
+	1 require vector<byte>		sValue;						//字段的值
+};
+
+//bdb字段更新信息
+struct BdbFieldUpdate
+{
+	1 require vector<byte>		sValue;						//字段的值
+	2 optional BdbFieldOper     oper;						//字段操作
+};
+
+//bdb行的key
+struct BdbRowKey
+{
+	1 require  map<string, BdbField>		mField;			//key字段集合(map的key为字段的名称)
+};
+
+//bdb行的value
+struct BdbRowValue
+{
+	1 require  map<string, BdbField>		mField;			//value字段集合(map的key为字段的名称)
+	2 optional long							iVersion;		//版本号
+};
+
+//bdb行信息
+struct BdbRow
+{
+	//1 require  BdbRowKey					rowKey;			//key
+	//2 require  BdbRowValue				rowValue;		//value
+	1 require  map<string, BdbField>		mField;			//value字段集合(map的key为字段的名称)
+	2 optional long							iVersion;		//版本号
+	
+};
+
+//bdb查询字段条件，只用于范围查询，eOper为EQ
+struct BdbFieldValue
+{
+	1 require BdbOper						eOper;			//查询的操作
+	2 require BdbField						field;			//查询的字段信息
+};
+
+//bdb查询字段条件
+struct BdbFieldCondition
+{
+	1 require string						sFieldName;     //查询的字段名
+	2 require BdbOper						eOper;			//查询的操作
+	3 require BdbField						field;			//查询的字段信息
+};
+
+//bdb更新行信息
+struct BdbRowUpdate
+{
+	//1 require  BdbRowKey							rowKey;			//key
+	//2 require  BdbRowValue						rowValue;		//value
+	1 require  map<string, BdbFieldUpdate>			mField;			//更新字段集合(map的key为字段的名称)
+	2 require  vector<vector<BdbFieldCondition> >	mFieldCond;	    //uupdate条件
+	3 optional long									iVersion;		//版本号
+	
+};
+
+//bdb查询条件
+struct BdbSelectCondition
+{
+	1 require  string								sTableName;		     //表名
+	2 require  vector<vector<BdbFieldCondition> >	mSelectKey;	       	 //查询条件
+	3 optional int									iLimit = -1;	     //限制条数
+	4 optional vector<string>                       vFields;             //指定的查询字段
+	5 optional bool                                 bReadBaseLocal = false;  //是否只查询落地数据
+};
+
+//bdb查询结果
+struct BdbSelectResult
+{
+	1 require  string								sTableName;		//表名
+	2 require  vector<BdbRow>						vRow;			//查询的记录结果
+};
+
+//
+struct BdbRangeSelectCondition
+{
+	1 require  string							sTableName;		//表名
+	2 require  map<string, BdbFieldValue>		mSelectStartKey;		//范围查询的起始key
+	3 require  map<string, BdbFieldValue>		mSelectEndKey;		//范围查询的结束key
+	4 require  int								iBorderFlag;
+	5 optional int								iLimit = -1;			//限制条数
+};
+
+//bdb范围查询结果
+struct BdbRangeSelectResult
+{
+	1 require  string								sTableName;		//表名
+	2 require  vector<BdbRow>						vRow;			//查询的记录结果
+	3 require  bool									bFinish;        //结束标志
+	4 require  map<string, BdbFieldValue>			mEndKeyRes;		//遍历的结束key，下次请求通过此结束key作为其实key查询
+};
+
+//bdb前缀查询
+struct BdbPrefixRangeSelectCondition
+{
+	1 require  string							sTableName;		//表名	
+	2 require  map<string, BdbFieldValue>		sStartPrefix;          //遍历的起始前缀
+	3 require  map<string, BdbFieldValue>		sEndPrefix;            //遍历的结束前缀
+	4 require  int								iBorderFlag;           //表示区间开闭标志位
+	5 optional  map<string, BdbFieldValue>		mSelectStartKey;		//范围查询的起始key
+};
+
+struct BdbPrefixRangeSelectResult
+{
+	1 require  string								sTableName;		//表名
+	2 require  vector<BdbRow>						vRow;			//查询的记录结果
+	3 require  bool									bFinish;        //结束标志
+	4 require  map<string, BdbFieldValue>			mEndKeyRes;		//遍历的结束key，下次请求通过此结束key作为起始key查询
+};
+
+//bdb覆盖写数据
+struct BdbInsertReq
+{
+	1 require string								sTableName;		//表名
+	2 require vector<BdbRow>						vRow;			//写入的记录
+	3 optional bool									bReplace = false;		//写入数据，是否按主键key进行冲突检查，如主键key已存在，则插入的记录失败
+};
+
+//bdb写入数据的结果
+struct BdbInsertResult
+{
+	1 require string								sTableName;		//表名
+	2 require map<int, int>							mpFailIndexReason; //写入错误的下表和索引
+};
+
+//bdb更新数据
+struct BdbUpdateReq
+{
+	1 require string								sTableName;		//表名
+	2 require bool									bHasVersion;	//是否带版本号
+	3 require vector<BdbRowUpdate>					vRow;			//更新的记录
+};
+
+//bdb更新数据的结果
+struct BdbUpdateResult
+{
+	1 require string								sTableName;		//表名
+	2 require map<int, int>							mpFailIndexReason; //更新错误的下表和索引
+};
+
+//bdb删除一行数据
+struct BdbRowDel
+{
+	1 require  vector<vector<BdbFieldCondition> >	mDeleteKey;		//删除条件
+};
+
+//bdb删除数据
+struct BdbDelReq
+{
+	1 require string								sTableName;		//表名
+	2 require vector<BdbRowDel>						vRowDel;		//删除的记录key
+};
+
+//bdb删除数据的结果
+struct BdbDelResult
+{
+	1 require string								sTableName;		//表名
+	2 require map<int, int>							mpFailIndexReason; //删除错误的下表和索引
+};
+
+//bdb镜像数据写请求
+struct BdbMirrorBatchRequest
+{
+	1 require string			sTableName;
+	2 require vector<byte>		vBinLogType;
+	3 require vector<string>	vKey;
+	4 require vector<string>	vValue;
+};
+
+//bdb镜像数据写回包
+struct BdbMirrorBatchResponse
+{
+	1 require string sTableName;
+	2 require map<int, int> mpFailIndexReason;
+};
+
+};

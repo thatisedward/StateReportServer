@@ -1,0 +1,255 @@
+module DCache
+{
+	enum CacheType
+    {
+    e_Cache,
+    e_TCache,
+    e_MKCache
+    };    
+
+	const string DVER = "@DataVer";
+        const string EXPIRETIME = "@ExpireTime";
+        const string SCOREVALUE = "@ScoreValue";
+
+    const int CACHE_SYS_ERR = -1;
+    const int CACHE_SUCC = 0;
+    const int CACHE_NO_DATA = 1;
+    const int CACHE_KEY_TYPE_ERR = 2;
+    const int CACHE_SERVER_TYPE_ERR = 3;
+    const int CACHE_MODULE_NAME_ERR = 4;
+    const int CACHE_KEY_AREA_ERR = 5;
+    const int CACHE_FORBID_OPT = 6;
+    const int CACHE_ONLY_KEY = 7;
+    const int CACHE_DIRTY_DATA = 8;
+    const int CACHE_DATA_VER_MISMATCH = 9;
+	const int CACHE_DATE_EXIST = 10;
+	const int CACHE_ADD_SUB_UNNUM = 11;
+    struct SKey
+    {
+        1 require string keyItem;
+        2 require int hash;
+    };
+    struct SValue
+    {
+        1 require string value;
+    };
+
+	//一期迁移用
+     struct Data
+    {
+    	1 require SKey k;
+		2 require SValue v;
+		3 optional unsigned int expireTimeSecond = 0;
+		4 optional bool dirty = true;
+		5 optional bool bIsOnlyKey = false;
+    };	
+	
+	 //二期迁移用
+	 struct MKData
+    {
+        1 require string uk;
+		2 require string value;
+		3 require byte dirty;     //0--干净数据， 1--脏数据
+		4 require int expireTime;
+    };
+
+    enum Op
+    {
+        SET,
+        ADD,
+        SUB,
+        EQ, // ==
+    	NE, // !=
+    	GT, // >
+    	LT, // <
+    	LE, // <=
+    	GE, // >=
+    	LIMIT,
+		PREPEND,
+		APPEND
+    };
+	
+    enum DataType
+    {
+    	INT,    // 整形
+    	STR 	// 字符串
+    };
+
+	enum DirectionType
+    {
+    	FORWARD,    // 沿主key链前进
+    	BACK 	// 沿主key链倒退
+    };
+	
+    //Update结构
+    struct UpdateValue
+    {
+        1 require Op op;   				//操作 set/add/sub
+        2 require string value;				//要修改的值
+    };
+
+    struct UpdateValueBS
+    {
+        1 require Op op;   				//操作 set/add/sub
+        2 require vector<byte> value;			//要修改的值
+    };
+
+    //条件查询结构
+    struct Condition
+    {
+	1 require string fieldName;			//字段名称
+        2 require Op op;   				//操作 ==/!=/</>/<=/>=
+        3 require string value;				//值
+    };
+
+    //条件查询结构
+    struct ConditionBS
+    {
+	1 require string fieldName;			//字段名称
+        2 require Op op;   				//操作 ==/!=/</>/<=/>=
+        3 require vector<byte> value;			//值
+    };
+
+    // DbAccess参数结构
+    // 字段值数据结构
+    struct DbUpdateValue
+    {
+        1 require Op op;   				//操作 set/add/sub
+        2 require string value;				//要修改的值
+		3 require DataType type;			//数据类型
+    };
+
+    struct DbUpdateValueBS
+    {
+        1 require Op op;   				//操作 set/add/sub
+        2 require vector<byte> value;			//要修改的值
+		3 require DataType type;			//数据类型
+    };
+
+    // 查询条件结构
+    struct DbCondition
+    {
+		1 require string fieldName;			//字段名称
+        2 require Op op;   				//操作 ==/!=/</>/<=/>=
+        3 require string value;				//值
+		4 require DataType type;			//数据类型
+    };
+
+    struct DbConditionBS
+    {
+		1 require string fieldName;			//字段名称
+        2 require Op op;   				//操作 ==/!=/</>/<=/>=
+        3 require vector<byte> value;			//值
+		4 require DataType type;			//数据类型
+    };
+
+    struct InsertKeyValue
+    {
+    	1 require  string mainKey;
+		2 require  map<string, UpdateValue> mpValue;
+		3 require  byte ver=0;
+		4 require  bool dirty=true;
+		5 require  bool replace=false;
+		6 require  int  expireTimeSecond=0;
+    };
+
+	struct UpdateFieldInfo
+	{
+	    1 require bool replace = true;
+		2 require UpdateValue upDateValue;
+	};
+	struct UpdateFieldInfoBS
+	{
+	    1 require bool replace = true;
+		2 require UpdateValueBS upDateValue;
+	};
+	struct UpdateKeyValue
+	{
+	    1 require  string mainKey;
+		2 require  map<string, UpdateFieldInfo> mpValue;
+		3 require  byte ver=0;
+		4 require  bool dirty=true;
+		5 require  bool insert=false;
+		6 require  int  expireTimeSecond=0;
+	};
+	struct UpdateKeyValueBS
+	{
+	    1 require  vector<byte> mainKey;
+		2 require  map<string, UpdateFieldInfoBS> mpValue;
+		3 require  byte ver=0;
+		4 require  bool dirty=true;
+		5 require  bool insert=false;
+		6 require  int  expireTimeSecond=0;
+	};
+
+    struct InsertKeyValueBS
+    {
+    	1 require vector<byte> mainKey;
+		2 require map<string, UpdateValueBS> mpValue;
+		3 require byte ver=0;
+		4 require bool dirty=true;
+		5 require bool replace=false;
+		6 require int  expireTimeSecond=0;
+    };
+
+    struct MainKeyValue
+    {
+		1 require string mainKey;
+		2 require vector<map<string, string> > value;
+		3 require int ret; //ret>=0 成功，其他 失败
+    };
+
+    struct MainKeyValueBin
+    {
+		1 require string mainKey;
+		2 require vector<byte> value;
+		3 require int ret; //ret>=0 成功，其他 失败
+    };
+
+    struct MainKeyValueBS
+    {
+    	1 require vector<byte> mainKey;
+		2 require vector<map<string, vector<byte> > > value;
+		3 require int ret; //ret>=0 成功，其他 失败
+    };
+
+    struct Record
+    {
+    	1 require string mainKey;
+    		2 require map<string, string> mpRecord;
+    		3 require int ret; 
+    };
+
+    struct RecordBS
+    {
+    	1 require vector<byte> mainKey;
+    		2 require map<string, vector<byte> > mpRecord;
+    		3 require int ret;
+    };
+
+    struct MainKeyCondition
+    {
+        1 require string mainKey;
+        2 require string field;
+        3 require vector<vector<Condition> > cond;
+        4 require Condition limit;
+        5 require bool bGetMKCout = false;
+    };
+
+    struct MainKeyConditionBS
+    {
+        1 require vector<byte> mainKey;
+        2 require string field;
+        3 require vector<vector<ConditionBS> > cond;
+        4 require ConditionBS limit;
+        5 require bool bGetMKCout = false;
+    };
+
+    struct DelCondition
+    {
+        1 require string mainKey;
+        2 require vector<Condition> cond;
+        3 require byte ver;
+    };
+
+};

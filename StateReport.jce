@@ -1,0 +1,9 @@
+module NewsAD{
+interface StateReport{
+
+    int Test(int a,int b,out int c); // Some example function
+
+    //int TransferToDurid(int num);
+
+};
+};

@@ -1,0 +1,92 @@
+#include "BdbComm.jce"
+
+module bdb
+{
+
+	const int	BDB_SELECT_SUCC						= 0;//成功
+    const int	BDB_SELECT_NOTFOUND					= -1;//key不存在
+    const int	BDB_SELECT_TABLE_NOEXIST			= -2;//tableid不存在
+    const int	BDB_SELECT_EXCEPTION				= -3;//查询异常
+    const int	BDB_SELECT_KEY_AREA_ERROR	        = -4;//范围不存在
+    const int   BDB_SELECT_UPSERVER_ERROR           = -5;//查询updateserver错误
+    const int   BDB_SELECT_PARAM_ERROR              = -6;//参数错误
+    const int   BDB_SELECT_SHCEMA_KEYSIZE_ERROR     = -7;//获取元数据key数目错误
+    const int   BDB_SELECT_SHCEMA_RECORDID_ERROR    = -8;//获取recordID错误
+    const int   BDB_ILIMIT_ZERO                     = -9;//iLimit为0
+    //const int   BDB_NO_VALID_BASE                   = -10;//没有可用的baseServer
+   
+    const int	BDB_WRITE_SUCC						= 0;
+    const int	BDB_WRITE_FAIL						= -1;
+    const int	BDB_WRITE_TABLE_NOEXIST				= -2;
+    const int	BDB_WRITE_TABLE_DETELING			= -3;
+    const int	BDB_WRITE_EXCEPTION					= -5;
+    const int	BDB_WRITE_NOT_MASTER				= -6;
+    const int   BDB_WRITE_KEY_ERROR					= -7;
+    const int	BDB_WRITE_KEY_ROUTER_ERROR			= -8;
+    const int	BDB_WRITE_KEY_ROUTER_AREA_ERROR		= -9;
+    const int   BDB_WRITE_KEY_INDEX_ERROR			= -10;
+    const int	BDB_WRITE_COLUMN_TYPE_ERROR			= -11;
+    const int	BDB_WRITE_ROW_INDEX_SIZE_ERROR		= -12;
+	const int	BDB_WRITE_KEY_TRANS_ERROR			= -13;
+	const int	BDB_UPDATE_NO_MEM_SPACE_ERROR		= -14;
+	const int	BDB_UPDATE_ROW_VER_NOT_EQ_ERROR		= -15;
+	const int	BDB_UPDATE_ROW_FIELD_ERROR			= -16;
+	const int	BDB_UPDATE_ROW_VER_NOT_CONT_ERROR	= -17;
+	const int	BDB_UPDATE_ROW_NOT_EXIST_ERROR		= -18;
+	const int	BDB_UPDATE_GET_EXPIRE_COLUMN_ERROR	= -19;
+	const int	BDB_UPDATE_ROW_EXPIRE_ERROR			= -20;
+	const int	BDB_UPDATE_MEM_LIMIT_ERROR			= -21;
+
+	const int	BDB_WRITE_NO_MEM_SPACE_ERROR			= -34;
+	const int	BDB_WRITE_ROW_VER_NOT_EQ_ERROR			= -35;
+	const int	BDB_WRITE_ROW_FIELD_ERROR				= -36;
+	const int	BDB_WRITE_ROW_VER_NOT_CONT_ERROR		= -37;
+	const int	BDB_WRITE_ROW_EXIST_ERROR				= -38;
+	const int	BDB_WRITE_INSERT_EXPIRE_COLUMN_ERROR	= -39;
+
+    const int   BDB_KEY_EMPTY                       = -118;//请求为空
+    const int   BDB_TABLENAME_MATCH_ERROR           = -119;//tablename错误
+    const int   BDB_CONVERT_ERROR                   = -120;//结构体转换错误
+    const int   BDB_FETCH_PROXY_ERROR               = -121;//获取proxy错误
+	const int	BDB_KEY_INVALID						= -122; //key无效(一般是key列不全)
+
+    const int   BDB_SYS_ERROR                       = -99;//系统异常
+	
+	const int   BDB_MIRROR_BLOCKED                  = -200; //写删改请求访问到了镜像集群
+	const int   BDB_NOT_MIRROR                      = -201; //镜像写请求访问到了非镜像集群
+
+	const int   BDB_OVERLOAD                      = -202; //集群过载
+
+
+interface Access
+{
+
+	//
+	int insert(BdbInsertReq insertReq, out BdbInsertResult insertResult);
+	
+	//
+	int update(BdbUpdateReq updateReq, out BdbUpdateResult updateResult);
+	
+	//
+	int del(BdbDelReq delReq, out BdbDelResult delResult);
+
+	//
+	int select(BdbSelectCondition selectCond, out BdbSelectResult selectResult);
+
+	//
+	int selectRange(BdbRangeSelectCondition selectCond, out BdbRangeSelectResult selectResult);
+
+	//
+	int selectRangePrefix(BdbPrefixRangeSelectCondition selectCond, out BdbPrefixRangeSelectResult selectResult);
+
+	//
+	int mirrorWrite(BdbMirrorBatchRequest req, out BdbMirrorBatchResponse rsp);
+
+	//
+	int test();
+
+	
+};
+
+
+}; 

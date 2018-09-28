@@ -1,0 +1,173 @@
+module DCache
+{
+    //proxy返回值定义
+    const int ET_SUCC = 0;
+    const int ET_SYS_ERR = -1;
+    const int ET_MODULE_NAME_INVALID = -2;
+    const int ET_KEY_INVALID = -3;
+    const int ET_KEY_AREA_ERR = -4;
+    const int ET_KEY_TYPE_ERR = -5;
+    const int ET_NO_DATA = -6;
+    const int ET_COMMAND_INVALID = -7;
+    const int ET_FORBID_DEL = -8;
+    const int ET_SERVER_TYPE_ERR = -9;
+    const int ET_DATA_EXIST = -10;
+    const int ET_FORBID_OPT = -11;	
+    const int ET_INPUT_PARAM_ERROR = -12;
+    const int ET_ONLY_KEY = -13;
+    const int ET_DIRTY_DATA = -14;	
+    const int ET_DATA_VER_MISMATCH = -15;
+    const int ET_PARTIAL_FAIL = -16;  //用于二期批量insert数据时，表示部分数据set失败
+    const int ET_GZIP_UNCOMPRESS_ERR = -17; //用于数据有压缩时的解压缩失败
+    const int ET_CACHE_TYPE_ERR = -18; //用于节点间同步数据时，表示cache类型错误
+    const int ET_SYNC_SET_SAME = -19;  //用于节点间同步数据时，表示同步set等于本地set	
+    const int ET_SET_SYNC_NOENABLE = -20;  //用于节点间同步数据时，表示该Proxy不支持节点间数据同步	
+
+    //批量查询ret字段定义
+    const int VALUE_SUCC = 0;		
+    const int VALUE_NO_DATA = 1;
+	
+    //批量设置ret字段的定义
+    const int SET_SUCC  = 0;  //set成功
+    const int SET_ERROR = -1; //set失败
+    const int SET_DATA_VER_MISMATCH = -2; //set失败，具体原因是数据版本错误
+
+    //批量erase、del返回值字段的定义
+    const int DEL_SUCC  = 0;  //删除成功
+    const int DEL_ERROR = -3; //删除失败
+    const int DEL_DATA_VER_MISMATCH = -4; //删除失败，具体原因是数据版本错误
+
+    struct IKeyValue
+    {
+        1 require int keyItem;
+        2 require string value;
+	3 optional int ret; // VALUE_SUCC 成功、 VALUE_NO_DATA 没有数据、 其他 失败
+	4 optional byte ver;
+        5 optional long expireTime;
+    }; 
+
+    struct IKeyValueBS
+    {
+        1 require int keyItem;
+        2 require vector<byte> value;
+	3 optional int ret; // VALUE_SUCC 成功、 VALUE_NO_DATA 没有数据、 其他 失败
+	4 optional byte ver;
+        5 optional long expireTime;
+    }; 
+
+    struct LKeyValue
+    {
+        1 require long keyItem;
+        2 require string value;
+	3 optional int ret; // VALUE_SUCC 成功、 VALUE_NO_DATA 没有数据、 其他 失败
+	4 optional byte ver;
+        5 optional long expireTime;
+    }; 
+
+    struct LKeyValueBS
+    {
+        1 require long keyItem;
+        2 require vector<byte> value;
+	3 optional int ret; // VALUE_SUCC 成功、 VALUE_NO_DATA 没有数据、 其他 失败
+	4 optional byte ver;
+        5 optional long expireTime;
+    };
+
+    struct SKeyValue
+    {
+        1 require string keyItem;
+        2 require string value;
+	3 optional int ret; // VALUE_SUCC 成功、 VALUE_NO_DATA 没有数据、 其他 失败
+	4 optional byte ver;
+        5 optional long expireTime;
+    };
+
+    //struct SKeyValueWithVer
+    //{
+    	//1 require string keyItem;
+	//2 require string value;
+	//3 require byte 	 ver;
+	//4 optional int ret;
+    //};
+
+    struct SSetKeyValue
+    {
+    	1 require string keyItem;
+	2 require string value;
+	3 require byte   version=0;
+	4 require bool   dirty=true;
+	5 require int    expireTimeSecond=0;
+    };    
+
+    struct ISetKeyValue
+    {
+    	1 require int 	 keyItem;
+	2 require string value;
+	3 require byte   version=0;
+	4 require bool   dirty=true;
+	5 require int    expireTimeSecond=0;
+    }; 
+
+    struct LSetKeyValue
+    {
+    	1 require long   keyItem;
+	2 require string value;
+	3 require byte   version=0;
+	4 require bool   dirty=true;
+	5 require int    expireTimeSecond=0;
+    };
+
+    struct SKeyValueBS
+    {
+        1 require vector<byte> keyItem;
+        2 require vector<byte> value;
+	3 optional int ret; // VALUE_SUCC 成功、 VALUE_NO_DATA 没有数据、 其他 失败
+	4 optional byte ver;
+        5 optional long expireTime;
+    };
+   
+    struct SSetKeyValueBS
+    {
+    	1 require  vector<byte> keyItem;
+	2 require  vector<byte> valueItem;
+	3 optional byte         version=0;
+	4 optional bool         dirty=true;
+	5 optional int          expireTimeSecond=0;
+    };
+
+    struct ISetKeyValueBS
+    {
+    	1 require int	        keyItem;
+	2 require vector<byte>  value;
+	3 require byte		version=0;
+	4 require bool 		dirty=true;
+	5 require int           expireTimeSecond=0;
+    };
+	
+    struct LSetKeyValueBS
+    {
+    	1 require long 		keyItem;
+	2 require vector<byte>  value;
+	3 require byte          version=0;
+	4 require bool 		dirty=true;
+	5 require int 		expireTimeSecond=0;
+    };	
+
+    struct SSetKeyResultBS
+    {
+    	1 require vector<byte> keyItem;
+	2 require int          ret;
+    };
+
+    struct SKeyVersionBS
+    {
+    	1 require vector<byte> keyItem;
+	2 require byte          ver;
+    };
+
+    struct SKeyResultBS
+    {
+    	1 require vector<byte> keyItem;
+	2 require int          ret;
+    };
+};
